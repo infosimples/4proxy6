@@ -1,0 +1,21 @@
+{
+  "name": "4proxy6",
+  "version": "0.0.1",
+  "description": "A MITM proxy application with incoming IPv4 and random outgoing IPv6",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "proxy",
+    "4to6",
+    "IPv4",
+    "IPv6"
+  ],
+  "author": "Adriano Dennanni",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "http-mitm-proxy": "^0.8.2",
+    "node-cache": "^5.1.0"
+  }
+}
