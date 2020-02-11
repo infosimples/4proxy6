@@ -1,5 +1,6 @@
 # 4proxy6
-![GitHub](https://img.shields.io/github/license/infosimples/4proxy6)
+[![npm version](https://badge.fury.io/js/4proxy6.svg)](https://www.npmjs.com/package/4proxy6)
+[![License](https://img.shields.io/github/license/infosimples/4proxy6)](https://github.com/infosimples/4proxy6/blob/master/LICENSE)
 
 A MITM proxy application with incoming IPv4/IPv6 and random outgoing IPv6
 
@@ -19,7 +20,9 @@ ___
 ## Usage
 
 You may use this package with `node 4proxy6.js` or using one of the binaries
-provided in the releases section.
+provided in the [releases section](https://github.com/infosimples/4proxy6/releases/).
+
+**npm**: `npm install 4proxy6`
 
 ```
 Usage: 4proxy6 [options]
