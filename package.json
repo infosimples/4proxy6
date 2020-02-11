@@ -1,10 +1,14 @@
 {
   "name": "4proxy6",
-  "version": "0.0.1",
-  "description": "A MITM proxy application with incoming IPv4 and random outgoing IPv6",
-  "main": "index.js",
+  "version": "1.0.0",
+  "description": "A MITM proxy application with incoming IPv4/IPv6 and random outgoing IPv6",
+  "main": "4proxy6.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-linux": "pkg -t node12-linux -o ./bin/linux_4proxy6 4proxy6.js",
+    "build-mac": "pkg -t node12-mac -o ./bin/mac_4proxy6 4proxy6.js",
+    "build-windows": "pkg -t node12-windows -o ./bin/windows_4proxy6 4proxy6.js",
+    "build-all": "npm run build-linux & npm run build-mac & npm run build-windows"
   },
   "keywords": [
     "proxy",
@@ -12,10 +16,17 @@
     "IPv4",
     "IPv6"
   ],
+  "bin": "4proxy6.js",
   "author": "Adriano Dennanni",
-  "license": "UNLICENSED",
+  "license": "MIT",
+  "repository": "github:infosimples/4proxy6",
   "dependencies": {
+    "commander": "^4.1.1",
     "http-mitm-proxy": "^0.8.2",
-    "node-cache": "^5.1.0"
+    "node-cache": "^5.1.0",
+    "random-ip": "0.0.1"
+  },
+  "devDependencies": {
+    "pkg": "^4.4.3"
   }
 }

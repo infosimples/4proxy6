@@ -105,3 +105,9 @@ dist
 
 # Stores VSCode versions
 .vscode
+
+# Binaries generated
+bin/
+
+# CA files
+ca/
