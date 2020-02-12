@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 'use strict';
 
 // Required libs
@@ -13,9 +14,15 @@ const program = new Commander.Command();
 program
     .requiredOption('-a, --address <address>', 'IPv6 address of the outgoing interface')
     .option('-b, --prefix_bits <number>', 'number of bits for IPv6 address prefix', 48)
-    .option('-p, --port <address>', 'port for listening', 3322)
-    .option('-t, --ttl <TTL>', 'TTL for cache', 1800);
+    .option('-c, --credentials <user:password>', 'user and password for proxy authentication')
+    .option('-p, --port <number>', 'port for listening', 3322)
+    .option('-t, --ttl <seconds>', 'TTL for cache', 1800);
 program.parse(process.argv);
+
+// Set authentication key
+const authKey = program.credentials ?
+    `Basic ${Buffer.from(program.credentials).toString('base64')}` :
+    null;
 
 // Cache for UUID <-> IPv6 (time in seconds)
 const cache = new NodeCache({ stdTTL: program.ttl, checkperiod: Math.floor(program.ttl / 2) });
@@ -35,6 +42,15 @@ proxy.onError(function (ctx, err, errorKind) {
 
 // Intercept requests
 proxy.onRequest(function (ctx, callback) {
+    // Check if is authenticated
+    if (authKey && ctx.clientToProxyRequest.headers["proxy-authorization"] !== authKey) {
+        ctx.proxyToClientResponse.statusCode = 407;
+        ctx.proxyToClientResponse.setHeader('proxy-authenticate', 'Basic');
+        ctx.proxyToClientResponse.end();
+
+        return;
+    }
+
     if (ctx.proxyToServerRequestOptions.headers['uuid']) {
         // Get the uuid from the headers and remove it
         const uuid = ctx.proxyToServerRequestOptions.headers['uuid'];
@@ -57,10 +73,12 @@ proxy.onRequest(function (ctx, callback) {
         callback();
     } else {
         // Answer with instructions
-        ctx.proxyToClientResponse.writeHead(400);
+        ctx.proxyToClientResponse.statusCode = 400;
         ctx.proxyToClientResponse.write('uuid header missing\n');
         ctx.proxyToClientResponse.end();
     }
+
+    return;
 });
 
 // Starts proxy
