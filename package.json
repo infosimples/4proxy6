@@ -1,6 +1,6 @@
 {
   "name": "4proxy6",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A MITM proxy application with incoming IPv4/IPv6 and random outgoing IPv6",
   "main": "4proxy6.js",
   "scripts": {

@@ -28,12 +28,12 @@ If you use npm: `npm install -g 4proxy6`. You will be able to use it system-wide
 Usage: 4proxy6 [options]
 
 Options:
-  -a, --address <address>     IPv6 address of the outgoing interface
-  -b, --prefix_bits <number>  number of bits for IPv6 address prefix (default: 48)
+  -a, --address <address>            IPv6 address of the outgoing interface
+  -b, --prefix_bits <number>         number of bits for IPv6 address prefix (default: 48)
   -c, --credentials <user:password>  user and password for proxy authentication
-  -p, --port <address>        port for listening (default: 3322)
-  -t, --ttl <TTL>             TTL for cache (default: 1800)
-  -h, --help                  output usage information
+  -p, --port <address>               port for listening (default: 3322)
+  -t, --ttl <TTL>                    TTL for cache (default: 1800)
+  -h, --help                         output usage information
 ```
 
 - `address`: base IPv6 address of the interface the proxy will use as exit.

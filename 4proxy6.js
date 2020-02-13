@@ -42,8 +42,12 @@ proxy.onError(function (ctx, err, errorKind) {
 
 // Intercept requests
 proxy.onRequest(function (ctx, callback) {
+    // Get proxy-authorization from header (first is for HTTPS, second for HTTP)
+    const reqAuthKey = ctx.connectRequest.headers['proxy-authorization'] ||
+                       ctx.clientToProxyRequest.headers['proxy-authorization'];
+ 
     // Check if is authenticated
-    if (authKey && ctx.clientToProxyRequest.headers["proxy-authorization"] !== authKey) {
+    if (authKey && reqAuthKey !== authKey) {
         ctx.proxyToClientResponse.statusCode = 407;
         ctx.proxyToClientResponse.setHeader('proxy-authenticate', 'Basic');
         ctx.proxyToClientResponse.end();
