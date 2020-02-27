@@ -3,9 +3,7 @@
 
 // Required libs
 const Commander = require('commander');
-const NodeCache = require('node-cache');
 const Proxy = require('http-mitm-proxy');
-const randomIp = require('random-ip');
 
 // CLI helper
 const program = new Commander.Command();
@@ -15,17 +13,18 @@ program
     .requiredOption('-a, --address <address>', 'IPv6 address of the outgoing interface')
     .option('-b, --prefix_bits <number>', 'number of bits for IPv6 address prefix', 48)
     .option('-c, --credentials <user:password>', 'user and password for proxy authentication')
+    .option('-m, --mode <string>', 'mode for IPv6 selection (uuid/ipv6/random)', 'uuid')
     .option('-p, --port <number>', 'port for listening', 3322)
     .option('-t, --ttl <seconds>', 'TTL for cache', 1800);
 program.parse(process.argv);
+
+// Sets the mode
+const handleRequest = require(`./modes/${program.mode}`).mode;
 
 // Set authentication key
 const authKey = program.credentials ?
     `Basic ${Buffer.from(program.credentials).toString('base64')}` :
     null;
-
-// Cache for UUID <-> IPv6 (time in seconds)
-const cache = new NodeCache({ stdTTL: program.ttl, checkperiod: Math.floor(program.ttl / 2) });
 
 // MITM proxy
 const proxy = Proxy();
@@ -40,49 +39,36 @@ proxy.onError(function (ctx, err, errorKind) {
     ctx.proxyToClientResponse.end();
 });
 
-// Intercept requests
-proxy.onRequest(function (ctx, callback) {
+function isAuthorized(ctx) {
     // Get proxy-authorization from header (first is for HTTP, second for HTTPS)
     const reqAuthKey = ctx.clientToProxyRequest.headers['proxy-authorization'] ||
-                       ctx.connectRequest.headers['proxy-authorization'];
- 
-    // Check if is authenticated
+        ctx.connectRequest.headers['proxy-authorization'];
+
+    // Check if is authorized
     if (authKey && reqAuthKey !== authKey) {
         ctx.proxyToClientResponse.statusCode = 407;
         ctx.proxyToClientResponse.setHeader('proxy-authenticate', 'Basic');
         ctx.proxyToClientResponse.end();
 
-        return;
+        return false;
+    } else {
+        return true;
     }
+}
 
-    if (ctx.proxyToServerRequestOptions.headers['uuid']) {
-        // Get the uuid from the headers and remove it
-        const uuid = ctx.proxyToServerRequestOptions.headers['uuid'];
-        delete ctx.proxyToServerRequestOptions.headers['uuid'];
+// Intercept requests
+proxy.onRequest(function (ctx, callback) {
+    // Check for authorization
+    if (!isAuthorized(ctx)) return;
 
-        // Create or get an IPv6
-        let ipv6;
-        if (cache.has(uuid)) {
-            ipv6 = cache.get(uuid);
-        } else {
-            ipv6 = randomIp(program.address, program.prefix_bits);;
-            cache.set(uuid, ipv6);
-        }
-
-        // Set the address we wish to use
-        ctx.proxyToServerRequestOptions.family = 6;
-        ctx.proxyToServerRequestOptions.localAddress = ipv6;
-
-        // Continue with the request
+    // handles the request
+    if (handleRequest(ctx, program)) {
+        // Continues with the request
         callback();
     } else {
-        // Answer with instructions
-        ctx.proxyToClientResponse.statusCode = 400;
-        ctx.proxyToClientResponse.write('uuid header missing\n');
-        ctx.proxyToClientResponse.end();
+        // Stops the request
+        return;
     }
-
-    return;
 });
 
 // Starts proxy
@@ -91,6 +77,6 @@ proxy.listen({
     sslCaDir: './ca'
 });
 
-console.log('4proxy6 is now up!');
-console.log(`Listening on port ${program.port}`);
-console.log(`Forwarding to addresses in ${program.address}/${program.prefix_bits} subrange`);
+console.info(`4proxy6 is now up in ${program.mode} mode`);
+console.info(`Listening on port ${program.port}`);
+console.info(`Forwarding to addresses in ${program.address}/${program.prefix_bits} subrange`);

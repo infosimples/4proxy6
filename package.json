@@ -23,6 +23,7 @@
   "dependencies": {
     "commander": "^4.1.1",
     "http-mitm-proxy": "^0.8.2",
+    "ip": "^1.1.5",
     "node-cache": "^5.1.0",
     "random-ip": "0.0.1"
   },
