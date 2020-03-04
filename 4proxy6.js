@@ -19,7 +19,13 @@ program
 program.parse(process.argv);
 
 // Sets the mode
-const handleRequest = require(`./modes/${program.mode}`).mode;
+let handleRequest;
+try {
+    handleRequest = require(`./modes/${program.mode}`).mode;
+} catch (err) {
+    console.error(`"${program.mode}" is not a valid mode`);
+    process.exit(9);
+}
 
 // Set authentication key
 const authKey = program.credentials ?
@@ -36,16 +42,32 @@ proxy.use(Proxy.wildcard);
 proxy.onError(function (ctx, err, errorKind) {
     console.error(err);
     ctx.proxyToClientResponse.writeHead(503);
+
+    if (err.code === 'EADDRNOTAVAIL') {
+        ctx.proxyToClientResponse.write(
+            `4proxy6 could not bind to address ${ctx.proxyToServerRequestOptions.localAddress}\n`
+        );
+    }
+
     ctx.proxyToClientResponse.end();
 });
 
 function isAuthorized(ctx) {
-    // Get proxy-authorization from header (first is for HTTP, second for HTTPS)
-    const reqAuthKey = ctx.clientToProxyRequest.headers['proxy-authorization'] ||
-        ctx.connectRequest.headers['proxy-authorization'];
+    // If no authKey was set, then the request is authorized to proceed
+    if (!authKey) {
+        return true;
+    }
 
-    // Check if is authorized
-    if (authKey && reqAuthKey !== authKey) {
+    // Get proxy-authorization from header (first is for HTTPS, second for HTTP)
+    let reqAuthKey;
+    if (ctx.connectRequest.headers) {
+        reqAuthKey = ctx.connectRequest.headers['proxy-authorization'];
+    } else {
+        reqAuthKey = ctx.clientToProxyRequest.headers['proxy-authorization'];
+    }
+
+    // Check if is authorization matches
+    if (reqAuthKey !== authKey) {
         ctx.proxyToClientResponse.statusCode = 407;
         ctx.proxyToClientResponse.setHeader('proxy-authenticate', 'Basic');
         ctx.proxyToClientResponse.end();

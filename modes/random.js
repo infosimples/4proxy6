@@ -1,5 +1,6 @@
-// This mode always use a different IPv6
+const randomIp = require('random-ip');
 
+// This mode always use a different IPv6
 module.exports = {
     mode: randomMode = function (ctx, program) {
         // Set the address we wish to use

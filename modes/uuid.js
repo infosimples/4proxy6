@@ -1,4 +1,5 @@
 const NodeCache = require('node-cache');
+const randomIp = require('random-ip');
 
 // Cache for UUID <-> IPv6 (time in seconds)
 let cache;

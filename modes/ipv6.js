@@ -1,12 +1,16 @@
-const ip = require('ip');
+const Address6 = require('ip-address').Address6;
 
 // This mode redirects all requests with same UUID to same IPv6
 module.exports = {
-    mode : function (ctx, program) {
+    mode: function (ctx, program) {
+        if (!program.baseAddress) {
+            program.baseAddress = new Address6(`${program.address}/${program.prefix_bits}`);
+        }
+
         let ipv6;
         if (ctx.proxyToServerRequestOptions.headers['ipv6']) {
             // Get the ipv6 from the headers and remove it
-            ipv6 = ctx.proxyToServerRequestOptions.headers['ipv6'];
+            ipv6 = new Address6(ctx.proxyToServerRequestOptions.headers['ipv6']);
             delete ctx.proxyToServerRequestOptions.headers['ipv6'];
         } else {
             // Answer with instructions
@@ -17,10 +21,10 @@ module.exports = {
             return false;
         }
 
-        if (ip.isV6Format(ipv6)) {
+        if (ipv6.valid && ipv6.isInSubnet(program.baseAddress)) {
             // Set the address we wish to use
             ctx.proxyToServerRequestOptions.family = 6;
-            ctx.proxyToServerRequestOptions.localAddress = ipv6;
+            ctx.proxyToServerRequestOptions.localAddress = ipv6.address;
 
             return true;
         } else {
